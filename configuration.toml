@@ -1,0 +1,37 @@
+name = "CS207 Project"
+id = "cs207"
+
+[directories]
+constraints = ["src/constraints/"]
+simulation  = ["sim/"]
+sources     = ["src/modules/", "lib/"]
+
+[[simulation]]
+id = "bin2bcd"
+top-symbol = "tb_bin2bcd"
+timescale = "1ns/1ps"
+
+[[simulation]]
+id = "bcd2seg7"
+top-symbol = "tb_bcd2seg7"
+timescale = "1ns/1ps"
+
+[[simulation]]
+id = "main_tb"
+top-symbol = "tb_main"
+timescale = "1ns/1ps"
+
+[[simulation]]
+id = "drv_seg7"
+top-symbol = "tb_drv_seg7"
+timescale = "1ns/1ps"
+
+[[fpga]]
+id = "ego1"
+part = "xc7a35tcsg324-1"
+
+[[project]]
+id = "lab6proj"
+fpga = "ego1"
+top-symbol = "main"
+constraints = "xilinx.xdc"

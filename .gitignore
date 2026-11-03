@@ -1,0 +1,6 @@
+build/
+.buildsys/
+.vscode/
+buildsys
+buildsys.bat
+buildsys.sh
