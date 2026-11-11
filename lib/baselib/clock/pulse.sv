@@ -22,24 +22,24 @@
 //!对脉冲信号进行边缘检测, 使其与时钟信号对齐, 生成上升沿和下降沿脉冲信号.
 //!
 module pulse_edge_align (
-    input wire clk,
-    input wire rst_n,
-    input wire pulse,
-    output wire posedge_pulse,
-    output wire negedge_pulse
+    clk_if.sink cr,
+    input logic pulse,
+    output baselib::sig_t sig
 );
     // 上一个时钟周期的脉冲信号
-    reg pulse_d;
+    logic pulse_d;
 
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
+    always_ff @(posedge cr.clk or negedge cr.rst_n) begin
+        if (!cr.rst_n)
             pulse_d <= 1'b0;
         else
             pulse_d <= pulse;
     end
 
-    assign posedge_pulse = pulse & ~pulse_d; // 上升沿检测
-    assign negedge_pulse = ~pulse & pulse_d; // 下降沿检测
+    logic pulse_pos, pulse_neg;
+    assign pulse_pos = pulse & ~pulse_d; // 上升沿检测
+    assign pulse_neg = ~pulse & pulse_d; // 下降沿检测
+    assign sig = '{sig: pulse, pos : pulse_pos, neg : pulse_neg};
 endmodule
 
 //!## 脉冲边沿消抖模块
@@ -63,25 +63,23 @@ endmodule
 //!对脉冲信号进行消抖与边缘检测, 使其与时钟信号对齐.
 //!
 module pulse_debounce#(
-    parameter integer CLK_FREQ = 100_000_000,
-    parameter integer DEBOUNCE_TIME = 20_000_000
+    parameter int CLK_FREQ,
+    parameter int DEBOUNCE_TIME
 ) (
-    input clk,
-    input wire rst_n,
-    input wire pulse,
-    output reg deb_pulse,
-    output wire deb_posedge,
-    output wire deb_negedge
+    clk_if.sink cr,
+    input logic pulse,
+    output baselib::sig_t debsig
 );
-    localparam integer DEBOUNCE_CYCLES = (DEBOUNCE_TIME / 1_000) * (CLK_FREQ / 1_000) / 1_000;
+    localparam int DEBOUNCE_CYCLES = (DEBOUNCE_TIME / 1_000) * (CLK_FREQ / 1_000) / 1_000;
     // 用 $clog2 自动推导计数器位宽，避免固定 32 位浪费资源
-    localparam integer CNT_WIDTH       = $clog2(DEBOUNCE_CYCLES + 1);
+    localparam int CNT_WIDTH       = $clog2(DEBOUNCE_CYCLES + 1);
 
     //--- 电平型消抖 ---
-    reg [CNT_WIDTH-1:0] cnt;
-    //--- 电平型消抖 ---
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    logic deb_pulse;
+    logic [CNT_WIDTH-1:0] cnt;
+
+    always_ff @(posedge cr.clk or negedge cr.rst_n) begin
+        if (!cr.rst_n) begin
             cnt       <= 31'd0;
             deb_pulse <= 1'b0;
         end
@@ -95,12 +93,11 @@ module pulse_debounce#(
             cnt <= cnt + 1'b1;
     end
 
+    // 脉冲对齐
     pulse_edge_align u_edge(
-        .clk(clk),
-        .rst_n(rst_n),
+        .cr(cr),
         .pulse(deb_pulse),
-        .posedge_pulse(deb_posedge),
-        .negedge_pulse(deb_negedge)
+        .sig(debsig)
     );
 
 endmodule

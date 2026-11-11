@@ -1,35 +1,30 @@
-module step_sequencer #(
-    // 每个状态持续多少个时钟周期
-    parameter integer CYCLES_PER_STEP = 25000,
-    // 状态数(这里 4 个状态覆盖 8 个数码管)
-    parameter integer STEP_COUNT      = 4,
-    // 输出计数的位宽，取能表示 STEP_COUNT 的最小值
-    parameter integer CNT_WIDTH       = $clog2(STEP_COUNT)
+//! 模 N 计数器, step 在 0..CNT_STATES-1 之间循环.
+//! en 在 cr.clk 上升沿采样; 异步低有效复位清零 step.
+module step_cnt #(
+    parameter int CNT_STATES = 4,
+    parameter int CNT_WIDTH = baselib::s_clog2(CNT_STATES)
 ) (
-    input  wire                  clk,
-    input  wire                  rst_n,     // 低有效复位，可选
-    output reg  [CNT_WIDTH-1:0]  step       // 0 ~ STEP_COUNT-1
+    clk_if.sink cr,
+    input logic en,
+    output logic [CNT_WIDTH-1:0] step
 );
-    // 计算计数器的位宽和最大值
-    localparam integer DIV_WIDTH = (CYCLES_PER_STEP > 1) ? $clog2(CYCLES_PER_STEP) : 1;
-    localparam [DIV_WIDTH-1:0] DIV_LAST = CYCLES_PER_STEP - 1;
+    localparam logic [CNT_WIDTH-1:0] LAST = CNT_WIDTH'(CNT_STATES - 1);
 
-    reg [DIV_WIDTH-1:0] div_cnt;
+    initial begin
+        if (CNT_STATES < 1)
+            $fatal(1, "step_cnt: require CNT_STATES >= 1, got %0d", CNT_STATES);
+        if (CNT_WIDTH < baselib::s_clog2(CNT_STATES))
+            $fatal(1, "step_cnt: CNT_WIDTH=%0d cannot represent %0d states", CNT_WIDTH, CNT_STATES);
+    end
 
-    // 计数器逻辑
-    always @(posedge clk or negedge rst_n) begin
-        // 复位信号低有效
-        if (!rst_n) begin
-            div_cnt <= 0;
-            step    <= 0;
-        end else if (div_cnt == DIV_LAST) begin
-            div_cnt <= 0;
-            if (step == STEP_COUNT - 1)
-                step <= 0;
+    always_ff @(posedge cr.clk or negedge cr.rst_n) begin
+        if (!cr.rst_n)
+            step <= '0;
+        else if (en) begin
+            if (step == LAST)
+                step <= '0;
             else
                 step <= step + 1'b1;
-        end else begin
-            div_cnt <= div_cnt + 1'b1;
         end
     end
 endmodule
