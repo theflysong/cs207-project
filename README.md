@@ -1,19 +1,31 @@
-## How to configure
+# CS207 FPGA 项目
 
-First, execute `git submodule update --init --recursive` to initialize and update the submodules.
-After that, FPGA-Buildsys will be cloned into `FPGA-Buildsys` directory.
+当前设计是 EGO1 交通灯示例. 复位后数码管第 0 位显示红灯, 每次有效按下第 0 个按键按红, 绿, 黄的顺序切换. Vivado 的构建目标名为 `huarongdao`, HDL 顶层为 `main`.
 
-The script `FPGA-Buildsys/main.py` is the main entry point of the build system.
-Use `python3 FPGA-Buildsys/main.py [options]` to run the build system.
+## 构建环境
 
-We recommend to first run `python3 FPGA-Buildsys/main.py install .` to install the quick entry scripts into the current directory. After that, you can run `./buildsys [options]` or `./buildsys.bat [options]` to run the build system,
-depending on your operating system.
+安装 Python 3.11+ 和 Vivado, 将 Vivado 的 `bin` 目录加入 PATH. 以下命令在项目根目录的 PowerShell 中运行.
 
-The build system requires several prerequisites to function properly. Therefore, we recommend to run `./buildsys init-venv` to create a virtual environment and install the required dependencies. The quick entry scripts will automatically activate the virtual environment when running the build system.
+```powershell
+git submodule update --init --recursive
+python FPGA-Buildsys/main.py install .
+.\buildsys.bat init-venv
+.\buildsys.bat toolchain vivado
+```
 
-For completions, you can run `./buildsys install completion` to install the completion scripts for your terminal.
+Bash 用户可用 `python3` 和 `./buildsys` 运行相同命令.
 
-You can run `./buildsys [toolchain]-[operations]` to run the operations for a specific toolchain. For example, `./buildsys vivado-simulation` will run the simulation operation for the Vivado toolchain. To avoid repeating the toolchain name, you can also run `./buildsys toolchain [toolchain]` to set the default toolchain. After that, you can run `./buildsys [operations]` to run the operations for the default toolchain. For example, if you set Vivado as the default toolchain, you can run `./buildsys simulation` to run the simulation operation for Vivado.
+## 仿真与构建
 
-For vivado toolchain, you need to add the Vivado path to your environment variable `PATH` before running the build system. 
-The path is usually `$(PATH-TO-VIVADO)\$(VIVADO-VERSION)\bin`. For example: `C:\Xilinx\Vivado\2018.3\bin`.
+```powershell
+.\buildsys.bat xpr-simulation main
+.\buildsys.bat xpr-simulation step_cnt
+.\buildsys.bat xpr-simulation bin2bcd
+.\buildsys.bat xpr-synthesis huarongdao
+.\buildsys.bat xpr-implementation huarongdao
+.\buildsys.bat xpr-bitstream huarongdao
+```
+
+仿真分别检查顶层交互和显示, 计数及消抖边界, 以及 BCD 转换和段码极性. 通过的仿真会输出对应的 `PASS` 标记, 生成工程和日志位于 `build/vivado/cs207/`.
+
+开发流程和 HDL 规范见 [AGENTS.md](AGENTS.md) 和 [STYLE.md](STYLE.md). 两份指南, HDL 文件和 XDC 约束使用 GBK 编码.

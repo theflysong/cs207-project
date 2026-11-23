@@ -1,4 +1,6 @@
-# EGO1: 100 MHz clk
+# EGO1 板载时钟. 10 ns 周期与 board::CLK_FREQ 一致.
+
+create_clock -name clk -period 10.000 [get_ports {clk}]
 
 set_property PACKAGE_PIN P17 [get_ports {clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {clk}]

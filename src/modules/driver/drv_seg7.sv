@@ -1,46 +1,61 @@
-//! EGO1 seven-segment scan driver; digit patterns are supplied by display logic.
-//! seg_sels[0:7] is ordered from the rightmost to the leftmost digit.
-//! The mapping to the two physical segment buses is private to this driver.
-//! Each scan phase lasts floor(board::CLK_FREQ / SEG7_SCAN_FREQ) clock cycles.
-//! Reset is asynchronous and active low; it selects digits 0 and 4.
-//! The registered divider enable adds one clock cycle before the first advance.
+// 模块 drv_seg7 轮询 EGO1 的两组数码管, 每次各选中一位.
+// 参数:
+// - SEG7_SCAN_FREQ: 换位频率, 单位 Hz, 默认 4,000, 范围 1..board::CLK_FREQ.
+// 端口:
+// - clk: 输入, 1 位板载工作时钟, 上升沿更新扫描位置.
+// - rst_n: 输入, 1 位低有效异步复位, 释放需与 clk 同步. 复位时选中位 0 和 4.
+// - seg7_patterns: 输入, 8 组 8 位段码, 从最低位开始依次对应数码管 0..7.
+// - seg7_ss0: 输出, 8 位段码, 对应数码管 4..7, 组合更新, 位序为 {dp, g, f, e, d, c, b, a}.
+// - seg7_ss1: 输出, 8 位段码, 对应数码管 0..3, 组合更新, 位序同 seg7_ss0.
+// - seg7_cs: 输出, 8 位高有效片选, 每组各有一位为高, 随扫描位置更新.
 module drv_seg7 #(
-    parameter int unsigned SEG7_SCAN_FREQ = 4_000
+    parameter int SEG7_SCAN_FREQ = 4_000
 ) (
-    clk_if.sink cr,
-    seg7_if.drv seg
+    input wire clk,
+    input wire rst_n,
+    input wire [board::SEG7_DIGIT_COUNT*baselib::SEG7_WIDTH-1:0] seg7_patterns,
+    output wire [baselib::SEG7_WIDTH-1:0] seg7_ss0,
+    output wire [baselib::SEG7_WIDTH-1:0] seg7_ss1,
+    output wire [board::SEG7_DIGIT_COUNT-1:0] seg7_cs
 );
-    // Assertions to check parameter validity
+    // 除法向下取整. 分频使能寄存后再推进扫描, 首次换位多等一拍.
+    localparam int DIGITS_PER_BANK = board::SEG7_DIGITS_PER_BANK;
+    localparam int SCAN_WIDTH = baselib::count_width(DIGITS_PER_BANK);
+    localparam int SEGMENT_WIDTH = baselib::SEG7_WIDTH;
+    localparam int CYCLES_PER_DIGIT = (SEG7_SCAN_FREQ > 0 && SEG7_SCAN_FREQ <= board::CLK_FREQ)
+        ? board::CLK_FREQ / SEG7_SCAN_FREQ : 1;
+    localparam [board::SEG7_DIGIT_COUNT-1:0] FIRST_DIGIT_PAIR = 8'h11;
+
+    wire scan_en;
+    wire [SCAN_WIDTH-1:0] scan_digit;
+
+    // synthesis translate_off
     initial begin
-        if (board::CLK_FREQ == 0)
-            $fatal(1, "drv_seg7: INVALID board::CLK_FREQ");
-
-        if (SEG7_SCAN_FREQ == 0 ||
-            SEG7_SCAN_FREQ > board::CLK_FREQ)
-            $fatal(1, "drv_seg7: SEG7_SCAN_FREQ must wihin (0, board::CLK_FREQ], but got %0d", SEG7_SCAN_FREQ);
+        if (SEG7_SCAN_FREQ < 1 || SEG7_SCAN_FREQ > board::CLK_FREQ) begin
+            $display("ERROR: drv_seg7 requires 1 <= SEG7_SCAN_FREQ <= board::CLK_FREQ");
+            $finish;
+        end
     end
+    // synthesis translate_on
 
-    // 每个数位持续的周期数
-    localparam int unsigned CYCLES_PER_DIGIT = board::CLK_FREQ / SEG7_SCAN_FREQ;
-
-    logic scan_en;
-    logic [1:0] scan_digit;
-
-    // 分频
-    clk_div #(.DIVISOR(CYCLES_PER_DIGIT)) u_scan_div (
-        .cr(cr),
+    clk_div #(
+        .DIVISOR(CYCLES_PER_DIGIT)
+    ) u_clk_div_0 (
+        .clk(clk),
+        .rst_n(rst_n),
         .en(scan_en)
     );
 
-    // 推进 scan_digit
-    step_cnt #(.CNT_STATES(4)) u_scan_cnt (
-        .cr(cr),
+    step_cnt #(
+        .CNT_STATES(DIGITS_PER_BANK)
+    ) u_step_cnt_0 (
+        .clk(clk),
+        .rst_n(rst_n),
         .en(scan_en),
         .step(scan_digit)
     );
 
-    // EGO1 routes digits 0..3 to ss1, and digits 4..7 to ss0.
-    assign seg.seg7_ss1 = seg.seg_sels[{1'b0, scan_digit}];
-    assign seg.seg7_ss0 = seg.seg_sels[{1'b1, scan_digit}];
-    assign seg.seg7_cs = 8'h11 << scan_digit;
+    assign seg7_ss1 = seg7_patterns[scan_digit*SEGMENT_WIDTH +: SEGMENT_WIDTH];
+    assign seg7_ss0 = seg7_patterns[(DIGITS_PER_BANK+scan_digit)*SEGMENT_WIDTH +: SEGMENT_WIDTH];
+    assign seg7_cs = FIRST_DIGIT_PAIR << scan_digit;
 endmodule
