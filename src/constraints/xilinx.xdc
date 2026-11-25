@@ -101,10 +101,21 @@ set_property PACKAGE_PIN R11 [get_ports {btn[0]}]
 set_property PACKAGE_PIN R17 [get_ports {btn[1]}]
 set_property PACKAGE_PIN R15 [get_ports {btn[2]}]
 set_property PACKAGE_PIN V1 [get_ports {btn[3]}]
-set_property PACKAGE_PIN J4 [get_ports {btn[4]}]
+set_property PACKAGE_PIN U4 [get_ports {btn[4]}]
 
 set_property IOSTANDARD LVCMOS33 [get_ports {btn[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {btn[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {btn[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {btn[3]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {btn[4]}]
+
+# EGO1 第 9 格 LED 从左到右对应 led[7:4], 其余 4 个灯对应 led[3:0].
+
+set_property -dict {PACKAGE_PIN K1 IOSTANDARD LVCMOS33} [get_ports {led[7]}]
+set_property -dict {PACKAGE_PIN H6 IOSTANDARD LVCMOS33} [get_ports {led[6]}]
+set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33} [get_ports {led[5]}]
+set_property -dict {PACKAGE_PIN J5 IOSTANDARD LVCMOS33} [get_ports {led[4]}]
+set_property -dict {PACKAGE_PIN K6 IOSTANDARD LVCMOS33} [get_ports {led[3]}]
+set_property -dict {PACKAGE_PIN L1 IOSTANDARD LVCMOS33} [get_ports {led[2]}]
+set_property -dict {PACKAGE_PIN M1 IOSTANDARD LVCMOS33} [get_ports {led[1]}]
+set_property -dict {PACKAGE_PIN K3 IOSTANDARD LVCMOS33} [get_ports {led[0]}]

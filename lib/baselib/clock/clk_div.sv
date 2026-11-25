@@ -8,16 +8,16 @@
 module clk_div #(
     parameter int DIVISOR = 2
 ) (
-    input wire clk,
-    input wire rst_n,
+    input logic clk,
+    input logic rst_n,
     output logic en
 );
     // 计数从 0 到 DIVISOR-1, 位宽至少为 1.
     localparam int CNT_WIDTH = baselib::count_width((DIVISOR > 0) ? DIVISOR : 1);
     localparam int LAST_COUNT_VALUE = (DIVISOR > 0) ? DIVISOR - 1 : 0;
-    localparam [CNT_WIDTH-1:0] LAST_COUNT = LAST_COUNT_VALUE[CNT_WIDTH-1:0];
+    localparam [CNT_WIDTH - 1:0] LAST_COUNT = LAST_COUNT_VALUE[CNT_WIDTH - 1:0];
 
-    logic [CNT_WIDTH-1:0] count;
+    logic [CNT_WIDTH - 1:0] count;
 
     // synthesis translate_off
     initial begin

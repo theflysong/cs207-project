@@ -29,7 +29,7 @@
 | 源文件, 目录, 模块, package | `snake_case` | `pulse_debounce.sv`, `step_cnt`, `board` |
 | 端口, 信号, 变量, 函数 | `snake_case` | `rst_n`, `scan_digit`, `cycles_from_ns` |
 | `parameter`, `localparam`, package 常量 | `UPPER_SNAKE_CASE` | `DEBOUNCE_TIME_NS`, `CNT_WIDTH`, `CLK_FREQ` |
-| 枚举类型 | `snake_case` 加 `_t` | `state_t`, `traffic_light_t` |
+| 枚举和数组类型别名 | `snake_case` 加 `_t` | `state_t`, `layout_t` |
 | 枚举值 | `UPPER_SNAKE_CASE`, 带含义前缀 | `STATE_IDLE`, `STATE_RUN`, `LIGHT_RED` |
 | 模块实例 | `u_<type>_<cnt>` | `u_step_cnt_0`, `u_pulse_debounce_0`, `u_drv_seg7_1` |
 | generate 块 | `gen_<purpose>` | `gen_digit`, `gen_channel` |
@@ -93,14 +93,14 @@ localparam [CNT_WIDTH - 1:0] LAST_CYCLE = SCAN_CYCLES - 1;
 
 | 允许项 | 范围 |
 | --- | --- |
-| `logic` | 普通信号, 端口和 enum 底层向量. net 仍按需要使用 `wire`, 不改变驱动规则 |
-| `enum` | 使用 `enum logic` 声明枚举. `typedef` 仅用于命名 enum 类型 |
+| `logic` | 普通变量, 单驱动信号, 端口和 enum 底层向量. 需要 net 语义时使用 `wire` |
+| `enum` | 使用 `enum logic` 声明枚举, 可用 `typedef` 命名枚举类型 |
 | `int` | 参数, 局部整数及循环变量, 注意其宽度和有符号语义 |
-| `package` | 只承载常量和函数, 通过 `package_name::member` 显式访问 |
-| 固定大小的多维数组 | 允许 packed 和 unpacked 维度, 可用于模块内部和端口 |
+| `package` | 承载常量, 函数和固定大小的数组类型别名, 通过 `package_name::member` 显式访问 |
+| 固定大小的多维数组 | 允许 packed 和 unpacked 维度, 可用于模块内部和端口, 可用 `typedef` 命名数组类型 |
 
-- `typedef enum logic ... state_t` 属于 enum 的允许声明形式, 不因此允许任意 typedef.
-- package 中不放共享可变变量, struct, interface 或自定义类型集合. 普通纯函数使用 Verilog 风格函数返回值赋值, 不使用 SystemVerilog 的 `return`.
+- `typedef` 用于命名 `enum logic` 或固定大小的数组类型. 数组的元素类型和维度遵守上述规则.
+- package 中不放共享可变变量. 普通纯函数使用 Verilog 风格函数返回值赋值, 不使用 SystemVerilog 的 `return`.
 - 禁止 `interface`, `modport`, `struct`, `union`, `class`, `program`, clocking block, 动态数组, 队列, 关联数组, mailbox, semaphore, 约束随机化及 SVA.
 - 禁止 `always_ff`, `always_comb`, `always_latch`, `unique`, `priority`, `foreach`, `inside`, `ref`, `const` 等额外语法. 时序使用 `always @(posedge clk ...)`, 组合使用 `always @*`.
 - 禁止 `bit`, `byte`, `shortint`, `longint`, `string` 等额外类型. 模块内部可使用 Verilog 已支持的固定大小 memory.
@@ -111,10 +111,21 @@ localparam [CNT_WIDTH - 1:0] LAST_CYCLE = SCAN_CYCLES - 1;
 - Verilog 已有的 `wire`, `reg`, `integer`, `parameter`, `localparam`, `generate`, `genvar`, `function`, `task`, `assign`, `always` 等可以继续使用. `logic` 或 `int` 合适时优先使用, 不能把普通 Verilog 结构误判为新增许可.
 - 仿真诊断使用 Verilog 已有的 `$display` 和 `$finish` 等设施, 不新增 `$fatal`, `$error` 或 SystemVerilog assertion. 工具能够编译某种语法不代表本项目允许使用.
 
+package 中的数组类型可用于信号和端口声明. 例如 `game::layout_t layout;` 和 `input game::layout_t layout`.
+
+```systemverilog
+package game;
+    localparam int GRID_WIDTH = 4;
+    localparam int LAYOUT_GRIDS = 9;
+
+    typedef logic [GRID_WIDTH - 1:0] layout_t [LAYOUT_GRIDS - 1:0];
+endpackage
+```
+
 ## 状态机与组合逻辑
 
 - 所有状态机使用 `enum logic` 声明状态, 指明足以表达全部状态的位宽. 状态名称和编码保持一致, 不用普通 logic 总线加 parameter 状态码代替枚举.
-- 状态类型通常在所属模块内定义. 跨模块传递状态时通过明确宽度的普通端口和具名编码约定连接, 不为共享类型在 package 中增加类型集合.
+- 状态类型通常在所属模块内定义. 跨模块传递状态时通过明确宽度的普通端口和具名编码约定连接.
 - 状态寄存器使用时序 `always` 和非阻塞赋值 `<=`, 下一状态及组合输出使用 `always @*` 和阻塞赋值 `=`.
 - 组合块先给默认值, 再按条件覆盖. `case` 保留 `default`, 明确非法状态恢复目标, 防止锁存器和无意保持.
 - 复位直接赋枚举成员. 状态转换只赋合法枚举成员, 不依赖类型强制转换, 数值加一或未定义编码切换.

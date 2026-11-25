@@ -14,20 +14,20 @@ module tb_bin2bcd;
     localparam int BIN_VALUES = 2 ** BIN_WIDTH;
     localparam int HEX_VALUES = 2 ** DIGIT_WIDTH;
     localparam int DECIMAL_BASE = 10;
-    localparam [HEX_VALUES*SEG7_WIDTH-1:0] REFERENCE_SEGMENTS =
+    localparam [HEX_VALUES * SEG7_WIDTH - 1:0] REFERENCE_SEGMENTS =
         128'h71_79_5e_39_7c_77_6f_7f_07_7d_6d_66_4f_5b_06_3f;
 
-    logic [BIN_WIDTH-1:0] low_binary;
-    logic [BIN_WIDTH-1:0] high_binary;
-    logic [DIGIT_WIDTH-1:0] low_digit;
-    logic [DIGIT_WIDTH-1:0] high_digit;
-    wire [CHANNELS*BCD_WIDTH-1:0] bcd;
-    wire [CHANNELS*SEG7_WIDTH-1:0] bcd_cathode;
-    wire [CHANNELS*SEG7_WIDTH-1:0] bcd_anode;
-    wire [CHANNELS*SEG7_WIDTH-1:0] hex_cathode;
-    wire [CHANNELS*SEG7_WIDTH-1:0] hex_anode;
-    logic [CHANNELS*SEG7_WIDTH-1:0] expected_hex;
-    logic [CHANNELS*SEG7_WIDTH-1:0] expected_bcd_seg7;
+    logic [BIN_WIDTH - 1:0] low_binary;
+    logic [BIN_WIDTH - 1:0] high_binary;
+    logic [DIGIT_WIDTH - 1:0] low_digit;
+    logic [DIGIT_WIDTH - 1:0] high_digit;
+    logic [CHANNELS * BCD_WIDTH - 1:0] bcd;
+    logic [CHANNELS * SEG7_WIDTH - 1:0] bcd_cathode;
+    logic [CHANNELS * SEG7_WIDTH - 1:0] bcd_anode;
+    logic [CHANNELS * SEG7_WIDTH - 1:0] hex_cathode;
+    logic [CHANNELS * SEG7_WIDTH - 1:0] hex_anode;
+    logic [CHANNELS * SEG7_WIDTH - 1:0] expected_hex;
+    logic [CHANNELS * SEG7_WIDTH - 1:0] expected_bcd_seg7;
     int value;
     int opposite;
 
@@ -51,10 +51,10 @@ module tb_bin2bcd;
         .hex_in({high_digit, low_digit}), .seg7_out(hex_anode)
     );
 
-    function automatic [BCD_WIDTH-1:0] decimal_digits(input int binary_value);
-        reg [DIGIT_WIDTH-1:0] hundreds;
-        reg [DIGIT_WIDTH-1:0] tens;
-        reg [DIGIT_WIDTH-1:0] units;
+    function automatic [BCD_WIDTH - 1:0] decimal_digits(input int binary_value);
+        logic [DIGIT_WIDTH - 1:0] hundreds;
+        logic [DIGIT_WIDTH - 1:0] tens;
+        logic [DIGIT_WIDTH - 1:0] units;
         begin
             hundreds = binary_value / (DECIMAL_BASE * DECIMAL_BASE);
             tens = (binary_value / DECIMAL_BASE) % DECIMAL_BASE;
@@ -63,10 +63,10 @@ module tb_bin2bcd;
         end
     endfunction
 
-    function automatic [SEG7_WIDTH-1:0] reference_bcd_seg7(input int digit);
+    function automatic [SEG7_WIDTH - 1:0] reference_bcd_seg7(input int digit);
         begin
             if (digit < DECIMAL_BASE) begin
-                reference_bcd_seg7 = REFERENCE_SEGMENTS[digit*SEG7_WIDTH +: SEG7_WIDTH];
+                reference_bcd_seg7 = REFERENCE_SEGMENTS[digit * SEG7_WIDTH +: SEG7_WIDTH];
             end else begin
                 reference_bcd_seg7 = {SEG7_WIDTH{1'b0}};
             end
@@ -76,8 +76,8 @@ module tb_bin2bcd;
     initial begin
         for (value = 0; value < BIN_VALUES; value = value + 1) begin
             opposite = BIN_VALUES - 1 - value;
-            low_binary = value[BIN_WIDTH-1:0];
-            high_binary = opposite[BIN_WIDTH-1:0];
+            low_binary = value[BIN_WIDTH - 1:0];
+            high_binary = opposite[BIN_WIDTH - 1:0];
             #1;
             if (bcd !== {decimal_digits(opposite), decimal_digits(value)}) begin
                 $display("ERROR: tb_bin2bcd unexpected BCD %h for inputs %0d and %0d",
@@ -88,10 +88,10 @@ module tb_bin2bcd;
 
         for (value = 0; value < HEX_VALUES; value = value + 1) begin
             opposite = HEX_VALUES - 1 - value;
-            low_digit = value[DIGIT_WIDTH-1:0];
-            high_digit = opposite[DIGIT_WIDTH-1:0];
-            expected_hex = {REFERENCE_SEGMENTS[opposite*SEG7_WIDTH +: SEG7_WIDTH],
-                REFERENCE_SEGMENTS[value*SEG7_WIDTH +: SEG7_WIDTH]};
+            low_digit = value[DIGIT_WIDTH - 1:0];
+            high_digit = opposite[DIGIT_WIDTH - 1:0];
+            expected_hex = {REFERENCE_SEGMENTS[opposite * SEG7_WIDTH +: SEG7_WIDTH],
+                REFERENCE_SEGMENTS[value * SEG7_WIDTH +: SEG7_WIDTH]};
             expected_bcd_seg7 = {reference_bcd_seg7(opposite), reference_bcd_seg7(value)};
             #1;
             if (hex_cathode !== expected_hex || hex_anode !== ~expected_hex ||

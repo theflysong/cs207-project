@@ -11,22 +11,22 @@
 module drv_seg7 #(
     parameter int SEG7_SCAN_FREQ = 4_000
 ) (
-    input wire clk,
-    input wire rst_n,
-    input wire [board::SEG7_DIGIT_COUNT - 1:0][baselib::SEG7_WIDTH - 1:0] seg7_patterns,
-    output wire [baselib::SEG7_WIDTH-1:0] seg7_ss0,
-    output wire [baselib::SEG7_WIDTH-1:0] seg7_ss1,
-    output wire [board::SEG7_DIGIT_COUNT-1:0] seg7_cs
+    input logic clk,
+    input logic rst_n,
+    input board::seg7_patterns_t seg7_patterns,
+    output logic [baselib::SEG7_WIDTH - 1:0] seg7_ss0,
+    output logic [baselib::SEG7_WIDTH - 1:0] seg7_ss1,
+    output logic [board::SEG7_DIGIT_COUNT - 1:0] seg7_cs
 );
     // 除法向下取整. 分频使能寄存后再推进扫描, 首次换位多等一拍.
     localparam int DIGITS_PER_BANK = board::SEG7_DIGITS_PER_BANK;
     localparam int SCAN_WIDTH = baselib::count_width(DIGITS_PER_BANK);
     localparam int CYCLES_PER_DIGIT = (SEG7_SCAN_FREQ > 0 && SEG7_SCAN_FREQ <= board::CLK_FREQ)
         ? board::CLK_FREQ / SEG7_SCAN_FREQ : 1;
-    localparam [board::SEG7_DIGIT_COUNT-1:0] FIRST_DIGIT_PAIR = 8'h11;
+    localparam [board::SEG7_DIGIT_COUNT - 1:0] FIRST_DIGIT_PAIR = 8'h11;
 
-    wire scan_en;
-    wire [SCAN_WIDTH-1:0] scan_digit;
+    logic scan_en;
+    logic [SCAN_WIDTH - 1:0] scan_digit;
 
     // synthesis translate_off
     initial begin

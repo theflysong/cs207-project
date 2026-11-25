@@ -46,7 +46,7 @@
 - 采用 C 风格命名: 普通标识符为 `snake_case`, 参数和枚举值为 `UPPER_SNAKE_CASE`. 模块实例按 `u_<type>_<cnt>` 命名, 如 `u_step_cnt_0`.
 - 每个模块在声明前写中文说明, 逐项解释所有端口和 parameter 的用途. 同一文件有多个模块时分别书写, 没有参数时明确写 `参数: 无.`.
 - EGO1 时钟频率统一读取 `board::CLK_FREQ`. 不在其他模块重复写入板载时钟频率数值.
-- 以 Verilog-2005 为基础, SystemVerilog 扩展仅允许 `logic`, `enum`, `int`, 固定大小的多维数组, 以及 package 中的常量和函数. 具体允许范围与替代写法见 STYLE.md.
+- 以 Verilog-2005 为基础, SystemVerilog 扩展仅允许 `logic`, `enum`, `int`, 固定大小的多维数组, 以及枚举和固定大小数组的 `typedef`. package 可承载常量, 函数和固定大小数组的类型别名. 具体允许范围与替代写法见 STYLE.md.
 - `interface`, `modport`, `struct`, `always_ff`, `always_comb` 等历史写法不属于允许范围. 本次任务未涉及的历史代码不要求机械重写, 新增及主动改写的实现必须遵守规则. 若模块迁移需要调整调用方, 应将相关接口一起迁移, 不能留下不兼容的连接.
 
 ## 构建与源码收集

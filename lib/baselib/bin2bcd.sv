@@ -11,8 +11,8 @@ module bin2bcd #(
     parameter int BIN_WIDTH = 8,
     parameter int BCD_DIGITS = 3
 ) (
-    input wire [N*BIN_WIDTH-1:0] bin_in,
-    output wire [N*BCD_DIGITS*baselib::HEX_DIGIT_WIDTH-1:0] bcd_out
+    input logic [N * BIN_WIDTH - 1:0] bin_in,
+    output logic [N * BCD_DIGITS * baselib::HEX_DIGIT_WIDTH - 1:0] bcd_out
 );
     // 每组输出的总位宽由其十进制数字数推导.
     localparam int BCD_WIDTH = BCD_DIGITS * baselib::HEX_DIGIT_WIDTH;
@@ -33,8 +33,8 @@ module bin2bcd #(
                 .BIN_WIDTH(BIN_WIDTH),
                 .BCD_DIGITS(BCD_DIGITS)
             ) u_bin2bcd_u_0 (
-                .bin_in(bin_in[channel*BIN_WIDTH +: BIN_WIDTH]),
-                .bcd_out(bcd_out[channel*BCD_WIDTH +: BCD_WIDTH])
+                .bin_in(bin_in[channel * BIN_WIDTH +: BIN_WIDTH]),
+                .bcd_out(bcd_out[channel * BCD_WIDTH +: BCD_WIDTH])
             );
         end
     endgenerate

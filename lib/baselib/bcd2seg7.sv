@@ -9,8 +9,8 @@ module bcd2seg7 #(
     parameter int N = 4,
     parameter POLARITY = baselib::SEG7_ANODE
 ) (
-    input wire [N*baselib::HEX_DIGIT_WIDTH-1:0] bcd_in,
-    output wire [N*baselib::SEG7_WIDTH-1:0] seg7_out
+    input logic [N * baselib::HEX_DIGIT_WIDTH - 1:0] bcd_in,
+    output logic [N * baselib::SEG7_WIDTH - 1:0] seg7_out
 );
     // synthesis translate_off
     initial begin
@@ -27,8 +27,8 @@ module bcd2seg7 #(
             bcd2seg7_u #(
                 .POLARITY(POLARITY)
             ) u_bcd2seg7_u_0 (
-                .bcd_in(bcd_in[digit*baselib::HEX_DIGIT_WIDTH +: baselib::HEX_DIGIT_WIDTH]),
-                .seg7_out(seg7_out[digit*baselib::SEG7_WIDTH +: baselib::SEG7_WIDTH])
+                .bcd_in(bcd_in[digit * baselib::HEX_DIGIT_WIDTH +: baselib::HEX_DIGIT_WIDTH]),
+                .seg7_out(seg7_out[digit * baselib::SEG7_WIDTH +: baselib::SEG7_WIDTH])
             );
         end
     endgenerate

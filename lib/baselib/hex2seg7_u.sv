@@ -7,10 +7,10 @@
 module hex2seg7_u #(
     parameter POLARITY = baselib::SEG7_ANODE
 ) (
-    input wire [baselib::HEX_DIGIT_WIDTH-1:0] hex_in,
-    output wire [baselib::SEG7_WIDTH-1:0] seg7_out
+    input logic [baselib::HEX_DIGIT_WIDTH - 1:0] hex_in,
+    output logic [baselib::SEG7_WIDTH - 1:0] seg7_out
 );
-    wire [baselib::SEG7_WIDTH-1:0] segments;
+    logic [baselib::SEG7_WIDTH - 1:0] segments;
 
     assign segments = baselib::hex_to_seg7(hex_in);
     // synthesis translate_off

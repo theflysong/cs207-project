@@ -13,12 +13,12 @@ module pulse_debounce #(
     parameter int CLK_FREQ = 0,
     parameter int DEBOUNCE_TIME_NS = 0
 ) (
-    input wire clk,
-    input wire rst_n,
-    input wire pulse,
-    output wire level,
-    output wire rise,
-    output wire fall
+    input logic clk,
+    input logic rst_n,
+    input logic pulse,
+    output logic level,
+    output logic rise,
+    output logic fall
 );
     // 用 64 位向量相乘, 向上取整到完整周期.
     localparam [63:0] NS_PER_SECOND = 64'd1_000_000_000;
@@ -28,9 +28,9 @@ module pulse_debounce #(
         ? (CLOCK_HZ * TIME_NS + NS_PER_SECOND - 1'b1) / NS_PER_SECOND : 64'd1;
     localparam int CNT_WIDTH = baselib::count_width(DEBOUNCE_CYCLES);
     localparam [63:0] LAST_COUNT_VALUE = DEBOUNCE_CYCLES - 1'b1;
-    localparam [CNT_WIDTH-1:0] LAST_COUNT = LAST_COUNT_VALUE[CNT_WIDTH-1:0];
+    localparam [CNT_WIDTH - 1:0] LAST_COUNT = LAST_COUNT_VALUE[CNT_WIDTH - 1:0];
 
-    logic [CNT_WIDTH-1:0] count;
+    logic [CNT_WIDTH - 1:0] count;
     logic debounced;
 
     // synthesis translate_off

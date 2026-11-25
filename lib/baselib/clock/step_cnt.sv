@@ -9,15 +9,15 @@
 module step_cnt #(
     parameter int CNT_STATES = 4
 ) (
-    input wire clk,
-    input wire rst_n,
-    input wire en,
-    output logic [baselib::count_width((CNT_STATES > 0) ? CNT_STATES : 1)-1:0] step
+    input logic clk,
+    input logic rst_n,
+    input logic en,
+    output logic [baselib::count_width((CNT_STATES > 0) ? CNT_STATES : 1) - 1:0] step
 );
     // 位宽与端口一致, 终值由状态数推导.
     localparam int CNT_WIDTH = baselib::count_width((CNT_STATES > 0) ? CNT_STATES : 1);
     localparam int LAST_STEP_VALUE = (CNT_STATES > 0) ? CNT_STATES - 1 : 0;
-    localparam [CNT_WIDTH-1:0] LAST_STEP = LAST_STEP_VALUE[CNT_WIDTH-1:0];
+    localparam [CNT_WIDTH - 1:0] LAST_STEP = LAST_STEP_VALUE[CNT_WIDTH - 1:0];
 
     // synthesis translate_off
     initial begin

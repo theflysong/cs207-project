@@ -21,12 +21,12 @@ module tb_step_cnt;
     logic rst_n;
     logic en;
     logic pulse;
-    wire [1:0] step;
-    wire step_one;
-    wire div_en;
-    wire div_one_en;
-    wire [2:0] slow_output;
-    wire [2:0] fast_output;
+    logic [1:0] step;
+    logic step_one;
+    logic div_en;
+    logic div_one_en;
+    logic [2:0] slow_output;
+    logic [2:0] fast_output;
 
     step_cnt #(.CNT_STATES(PERIOD_CYCLES)) u_step_cnt_0 (
         .clk(clk), .rst_n(rst_n), .en(en), .step(step)

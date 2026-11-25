@@ -7,10 +7,10 @@
 module bcd2seg7_u #(
     parameter POLARITY = baselib::SEG7_ANODE
 ) (
-    input wire [baselib::HEX_DIGIT_WIDTH-1:0] bcd_in,
-    output wire [baselib::SEG7_WIDTH-1:0] seg7_out
+    input logic [baselib::HEX_DIGIT_WIDTH - 1:0] bcd_in,
+    output logic [baselib::SEG7_WIDTH - 1:0] seg7_out
 );
-    wire [baselib::SEG7_WIDTH-1:0] segments;
+    logic [baselib::SEG7_WIDTH - 1:0] segments;
 
     // 仅有限的 BCD 数值可使用公共段码表.
     assign segments = (bcd_in <= baselib::BCD_MAX_DIGIT)

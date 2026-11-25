@@ -8,12 +8,12 @@
 // - rise: 输出, 1 位高有效上升沿, 从电平上升持续到下次 clk 采样.
 // - fall: 输出, 1 位高有效下降沿, 从电平下降持续到下次 clk 采样.
 module pulse_edge_align (
-    input wire clk,
-    input wire rst_n,
-    input wire pulse,
-    output wire level,
-    output wire rise,
-    output wire fall
+    input logic clk,
+    input logic rst_n,
+    input logic pulse,
+    output logic level,
+    output logic rise,
+    output logic fall
 );
     logic previous_pulse;
 
