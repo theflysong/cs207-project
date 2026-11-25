@@ -29,7 +29,7 @@
 | `src/modules/config/ego1.sv` | EGO1 的 `board` package, 提供 `board::CLK_FREQ` 等板级常量 |
 | `src/modules/driver/` | 数码管等板级外设驱动 |
 | `src/modules/traffic_light.sv` 和 `src/modules/traffic_light_2_seg7.sv` | 交通灯示例状态机和显示译码 |
-| `sim/` | 独立的 Vivado 回归仿真, 顶层, 计数和转换测试 |
+| `sim/` | 独立的 Vivado 回归仿真, 包含计数及消抖边界和转换测试 |
 | `src/constraints/xilinx.xdc` | EGO1 引脚和电气约束, 修改前核对顶层端口与开发板资料 |
 | `lib/baselib/` | 计数, 分频, 消抖, 边沿检测及编码转换等公共 HDL |
 | `FPGA-Buildsys/` | 独立 Git 子模块, 提供 Python 构建入口和工具链任务 |
@@ -46,7 +46,7 @@
 - 采用 C 风格命名: 普通标识符为 `snake_case`, 参数和枚举值为 `UPPER_SNAKE_CASE`. 模块实例按 `u_<type>_<cnt>` 命名, 如 `u_step_cnt_0`.
 - 每个模块在声明前写中文说明, 逐项解释所有端口和 parameter 的用途. 同一文件有多个模块时分别书写, 没有参数时明确写 `参数: 无.`.
 - EGO1 时钟频率统一读取 `board::CLK_FREQ`. 不在其他模块重复写入板载时钟频率数值.
-- 以 Verilog-2005 为基础, SystemVerilog 扩展仅允许 `logic`, `enum`, `int`, 以及 package 中的常量和函数. 具体允许范围与替代写法见 STYLE.md.
+- 以 Verilog-2005 为基础, SystemVerilog 扩展仅允许 `logic`, `enum`, `int`, 固定大小的多维数组, 以及 package 中的常量和函数. 具体允许范围与替代写法见 STYLE.md.
 - `interface`, `modport`, `struct`, `always_ff`, `always_comb` 等历史写法不属于允许范围. 本次任务未涉及的历史代码不要求机械重写, 新增及主动改写的实现必须遵守规则. 若模块迁移需要调整调用方, 应将相关接口一起迁移, 不能留下不兼容的连接.
 
 ## 构建与源码收集
@@ -72,7 +72,7 @@
 - `directories.sources` 当前为 `src/modules/` 和 `lib/`. 构建系统递归收集其中全部 `.sv` 与 `.v` 文件, 按相对路径排序并去重, 不建立符号索引或依赖图, 不按顶层可达性筛选源码.
 - 不把临时模块, 重复定义, 旧版本源码或测试替身放进上述目录. 不依赖未被实例化来避开编译问题.
 - 新增 package 时必须验证工具实际采用的编译顺序. Vivado 会更新编译顺序, 其他前端不能假定存在自动依赖排序.
-- `configuration.toml` 将 `sim/` 配置为仿真目录, 仿真目标 id 为 `main`, `step_cnt` 和 `bin2bcd`. 使用 `xpr-simulation <simulation-id>` 运行对应回归.
+- `configuration.toml` 将 `sim/` 配置为仿真目录, 仿真目标 id 为 `step_cnt` 和 `bin2bcd`. 使用 `xpr-simulation <simulation-id>` 运行对应回归.
 - `build` 始终使用 Icarus, `simulate` 按所选工具链路由. 不使用当前 CLI 不支持的 `simulation` 或 `vivado-simulation` 命令名.
 - 通用 `synthesis`, `implementation`, `bitstream`, `program` 按所选工具链路由. 修改源码后的综合或仿真不等于已经完成硬件烧录和板上验证.
 - Vivado 阶段会检查源码清单及配置快照, 必要时重新导出共享工程. 生成工程位于 `build/vivado/cs207/`, 不直接编辑其中的 XPR 或生成 Tcl.

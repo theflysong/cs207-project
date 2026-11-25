@@ -14,6 +14,7 @@
 - HDL 源码 (`.v`, `.sv`), 头文件 (`.vh`, `.svh`), testbench 和 XDC 约束 (`.xdc`) 使用 GBK 编码. 以 GBK 打开和保存这些文件, 确认中文注释可正常读取.
 - AGENTS.md 和 STYLE.md 也使用 GBK 编码. 新增文件使用 LF 行尾, 末尾保留换行, 不留行尾空白. 修改旧文件时避免无关的全文件编码和排版变动.
 - HDL 使用 4 空格缩进, 不使用 Tab. `begin` 与控制语句同一行, `end` 与所属块对齐, 多行分支显式使用 `begin` 和 `end`.
+- 二元运算符与左右操作数之间各留一个空格, 位宽和下标表达式也遵守此规则. 例如 `a + b`, `a == b` 和 `[WIDTH - 1:0]`.
 - 新增 HDL 使用 `.sv` 后缀, 但只使用本文允许的语言范围. 不能以文件后缀或工具支持为由扩大语法范围.
 - 模块围绕单一职责组织. 板级连接留在顶层或驱动, 通用计数与转换逻辑放在职责匹配的公共模块中.
 - 优先每个文件一个主要模块. 同一文件声明多个模块时, 每个模块都必须有独立的模块头注释.
@@ -71,7 +72,7 @@ step_cnt #(
 parameter int SCAN_FREQ_HZ = 4_000;
 localparam int SCAN_CYCLES = board::CLK_FREQ / SCAN_FREQ_HZ;
 localparam int CNT_WIDTH = (SCAN_CYCLES > 1) ? $clog2(SCAN_CYCLES) : 1;
-localparam [CNT_WIDTH-1:0] LAST_CYCLE = SCAN_CYCLES - 1;
+localparam [CNT_WIDTH - 1:0] LAST_CYCLE = SCAN_CYCLES - 1;
 ```
 
 这些派生值的前置条件为 `1 <= SCAN_FREQ_HZ <= board::CLK_FREQ`. 定义常量后, 实际逻辑也应引用这些名称, 不能只声明而继续使用原始数值.
@@ -96,15 +97,17 @@ localparam [CNT_WIDTH-1:0] LAST_CYCLE = SCAN_CYCLES - 1;
 | `enum` | 使用 `enum logic` 声明枚举. `typedef` 仅用于命名 enum 类型 |
 | `int` | 参数, 局部整数及循环变量, 注意其宽度和有符号语义 |
 | `package` | 只承载常量和函数, 通过 `package_name::member` 显式访问 |
+| 固定大小的多维数组 | 允许 packed 和 unpacked 维度, 可用于模块内部和端口 |
 
 - `typedef enum logic ... state_t` 属于 enum 的允许声明形式, 不因此允许任意 typedef.
 - package 中不放共享可变变量, struct, interface 或自定义类型集合. 普通纯函数使用 Verilog 风格函数返回值赋值, 不使用 SystemVerilog 的 `return`.
 - 禁止 `interface`, `modport`, `struct`, `union`, `class`, `program`, clocking block, 动态数组, 队列, 关联数组, mailbox, semaphore, 约束随机化及 SVA.
 - 禁止 `always_ff`, `always_comb`, `always_latch`, `unique`, `priority`, `foreach`, `inside`, `ref`, `const` 等额外语法. 时序使用 `always @(posedge clk ...)`, 组合使用 `always @*`.
-- 禁止 `bit`, `byte`, `shortint`, `longint`, `string` 等额外类型. 多路数据端口使用单个打平向量, 不使用多维 packed 向量或 unpacked 数组端口. 模块内部可使用 Verilog 已支持的固定大小 memory.
+- 禁止 `bit`, `byte`, `shortint`, `longint`, `string` 等额外类型. 模块内部可使用 Verilog 已支持的固定大小 memory.
+- 固定大小的多维数组声明可写成 `logic [3:0][7:0] channel_data;` 或 `logic [7:0] pixel_data [0:1][0:3];`.
 - 禁止赋值模式 `'{...}`, 类型或尺寸转换 `type'(expr)` 和 `WIDTH'(expr)`, 无尺寸单比特填充值 `'0` 与 `'1`, 自增自减 `++` 与 `--`, 复合赋值 `+=` 等额外操作符.
 - 使用普通拼接和重复拼接, 如 `{WIDTH{1'b0}}`; 使用 `i = i + 1` 和 `value = value + delta`. 宽度转换通过明确位宽的声明, 位选或拼接实现.
-- 使用显式端口和打平向量代替 interface 与 struct. 不通过 `include`, 宏或 package 包装来隐藏被禁止的语法.
+- 使用显式端口传递数据, 按数据布局选择打平向量或固定大小的数组. 不通过 `include`, 宏或 package 包装来隐藏被禁止的语法.
 - Verilog 已有的 `wire`, `reg`, `integer`, `parameter`, `localparam`, `generate`, `genvar`, `function`, `task`, `assign`, `always` 等可以继续使用. `logic` 或 `int` 合适时优先使用, 不能把普通 Verilog 结构误判为新增许可.
 - 仿真诊断使用 Verilog 已有的 `$display` 和 `$finish` 等设施, 不新增 `$fatal`, `$error` 或 SystemVerilog assertion. 工具能够编译某种语法不代表本项目允许使用.
 
@@ -182,14 +185,14 @@ end
 // - rst_n: 输入, 1 位异步低有效复位, 拉低时清零计数值.
 // - en: 输入, 1 位高有效计数使能, 在 clk 上升沿采样, 为低时保持.
 // - count: 输出, 计数值, 位宽为 max(1, ceil(log2(PERIOD_CYCLES))).
-//   取值为 0..PERIOD_CYCLES-1, 在 clk 上升沿更新, 复位后为零.
+//   取值从 0 到 PERIOD_CYCLES - 1, 在 clk 上升沿更新, 复位后为零.
 module tick_counter #(
     parameter int PERIOD_CYCLES = 4
 ) (
     input wire clk,
     input wire rst_n,
     input wire en,
-    output logic [((PERIOD_CYCLES > 1) ? $clog2(PERIOD_CYCLES) : 1)-1:0] count
+    output logic [((PERIOD_CYCLES > 1) ? $clog2(PERIOD_CYCLES) : 1) - 1:0] count
 );
     // 计数终值, 从 PERIOD_CYCLES 推导, 不允许单独覆盖.
     localparam int LAST_COUNT = PERIOD_CYCLES - 1;

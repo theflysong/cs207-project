@@ -17,10 +17,6 @@ top-symbol = "main"
 constraints = "xilinx.xdc"
 
 [[simulation]]
-id = "main"
-top-symbol = "tb_main"
-
-[[simulation]]
 id = "step_cnt"
 top-symbol = "tb_step_cnt"
 
